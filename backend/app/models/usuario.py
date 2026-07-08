@@ -17,7 +17,7 @@ class RolUsuario(str, enum.Enum):
 class Usuario(Base):
     __tablename__ = "usuarios"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)  # la PK ya crea su propio índice, index=True aquí era redundante
     nombre = Column(String(150), nullable=False)
     documento = Column(String(30), nullable=False, unique=True)
     rol = Column(Enum(RolUsuario, name="rol_usuario"), nullable=False)
@@ -26,7 +26,7 @@ class Usuario(Base):
 
     password_hash = Column(String(255), nullable=False)  # nunca texto plano
     activo = Column(Boolean, nullable=False, default=True)  # baja lógica, no se borra (conserva historial)
-    fecha_creacion = Column(DateTime(timezone=False), server_default=func.now())
+    fecha_creacion = Column(DateTime(timezone=False), nullable=False, server_default=func.now())
 
     # remote_side=[id]: resuelve la ambigüedad de la FK apuntando a la misma tabla
     operarios_a_cargo = relationship("Usuario", backref="lider", remote_side=[id])

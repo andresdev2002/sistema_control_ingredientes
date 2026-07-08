@@ -9,7 +9,7 @@ from app.database import Base
 class Recepcion(Base):
     __tablename__ = "recepciones"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     codigo_sap = Column(String(30), ForeignKey("material_maestro.codigo_sap"), nullable=False)
     lote_sap = Column(String(30), nullable=False)
     lote_proveedor = Column(String(30), nullable=False)
@@ -17,4 +17,4 @@ class Recepcion(Base):
     cantidad_recibida = Column(Numeric(10, 2), nullable=False)
     codigo_barras = Column(String(50), nullable=False, unique=True)  # generado por el sistema al recibir
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    fecha_recepcion = Column(DateTime(timezone=False), server_default=func.now())
+    fecha_recepcion = Column(DateTime(timezone=False), nullable=False, server_default=func.now())

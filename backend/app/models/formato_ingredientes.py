@@ -9,10 +9,10 @@ from app.database import Base
 class FormatoIngredientes(Base):
     __tablename__ = "formatos_fo_pfto_0057"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     orden_produccion_id = Column(Integer, ForeignKey("ordenes_produccion.id"), nullable=False, unique=True)
     generado_por = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    fecha_generacion = Column(DateTime(timezone=False), server_default=func.now())
+    fecha_generacion = Column(DateTime(timezone=False), nullable=False, server_default=func.now())
 
     firmado_lider = Column(Boolean, nullable=False, default=False)
     lider_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
