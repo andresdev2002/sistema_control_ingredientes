@@ -24,6 +24,11 @@ class UsuarioLogin(BaseModel):
     password: str
 
 
+class UsuarioEstadoUpdate(BaseModel):
+    """Lo que se recibe en el PATCH para activar/desactivar un usuario."""
+    activo: bool
+
+
 class UsuarioResponse(BaseModel):
     """Lo que se devuelve al cliente. Nunca incluye password_hash."""
     id: int
