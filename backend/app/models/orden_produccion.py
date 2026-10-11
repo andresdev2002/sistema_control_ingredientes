@@ -15,6 +15,9 @@ class OrdenProduccion(Base):
     codigo_producto_terminado = Column(String(30), nullable=True)
     estado = Column(Enum(EstadoOrden, name="estado_orden"), nullable=False, default=EstadoOrden.ABIERTA)
     usuario_apertura_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    turno_apertura = Column(Enum(TurnoTipo, name="turno_tipo"), nullable=False)
+    turno_apertura = Column(
+        Enum(TurnoTipo, name="turno_tipo", values_callable=lambda enum_cls: [e.value for e in enum_cls]),
+        nullable=False,
+    )
     fecha_apertura = Column(DateTime(timezone=False), nullable=False, server_default=func.now())
     fecha_cierre = Column(DateTime(timezone=False), nullable=True)  # se llena al generar el formato
