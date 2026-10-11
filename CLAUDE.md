@@ -27,6 +27,10 @@ Desde `backend/`:
 ./venv_wsl/bin/uvicorn app.main:app
 ```
 
+## Pendiente de diseño
+
+- Firma de "calidad" en `formatos_fo_pfto_0057`: el modelo no tiene rol `CALIDAD` ni un campo para registrar quién firmó esa parte (solo `firmado_calidad` + `fecha_firma_calidad`, sin FK a usuario). Por decisión de negocio temporal, hoy la marca cualquier `LIDER` activo, igual que la firma de líder, pero sin guardar su identidad. Si se agrega un rol `CALIDAD` real, esto requerirá tocar el modelo (`lider_id`-equivalente para calidad) y una migración.
+
 ## Endpoints existentes
 
 - `POST /api/auth/login` (público)
