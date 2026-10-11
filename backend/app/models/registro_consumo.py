@@ -36,5 +36,8 @@ class RegistroConsumo(Base):
     saldo_nuevo_id = Column(Integer, ForeignKey("saldos.id"), nullable=True)  # reingreso, si sobró algo
 
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    turno = Column(Enum(TurnoTipo, name="turno_tipo"), nullable=False)
+    turno = Column(
+        Enum(TurnoTipo, name="turno_tipo", values_callable=lambda enum_cls: [e.value for e in enum_cls]),
+        nullable=False,
+    )
     fecha_hora = Column(DateTime(timezone=False), nullable=False, server_default=func.now())
