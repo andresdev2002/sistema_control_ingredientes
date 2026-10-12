@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.api.deps import get_current_user
-from app.models.usuario import Usuario
+from app.api.deps import get_current_user, require_rol
+from app.models.usuario import Usuario, RolUsuario
 from app.schemas.registro_consumo import ConsumoCreate, ConsumoResponse
 from app.services.registro_consumo_service import (
     ConflictoConsumoError,
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/consumos", tags=["consumos"])
 def crear(
     datos: ConsumoCreate,
     db: Session = Depends(get_db),
-    usuario_actual: Usuario = Depends(get_current_user),
+    usuario_actual: Usuario = Depends(require_rol(RolUsuario.OPERARIO, RolUsuario.LIDER)),
 ):
     try:
         return crear_consumo(db, datos, usuario_actual.id)

@@ -90,6 +90,26 @@ def test_operario_puede_crear_consumo(client, operario_headers, lider, db_sessio
     assert resp.status_code == 201
 
 
+def test_calidad_no_puede_crear_consumo_403(client, calidad_headers, lider_headers, lider, db_session, material):
+    orden = _crear_orden_abierta(db_session, lider, codigo="TEST-ORD-CONSUMO-CALIDAD")
+    _crear_saldo_activo(db_session, lider, material, "TEST-CB-CALIDAD-1", cantidad="5.00")
+
+    resp = client.post(
+        "/api/consumos",
+        json=_payload_consumo(orden.id, "TEST-CB-CALIDAD-1", peso_capturado="2.00"),
+        headers=calidad_headers,
+    )
+    assert resp.status_code == 403
+
+    # no se guardó nada: sin registros para la orden y el saldo intacto
+    consumos = client.get("/api/consumos", params={"orden_produccion_id": orden.id}, headers=calidad_headers)
+    assert consumos.status_code == 200
+    assert consumos.json() == []
+    saldo_resp = client.get("/api/saldos/TEST-CB-CALIDAD-1", headers=lider_headers)
+    assert saldo_resp.json()["cantidad_disponible"] == "5.00"
+    assert saldo_resp.json()["estado"] == "ACTIVO"
+
+
 def test_listar_consumos_filtrado_por_orden(client, lider_headers, lider, db_session, material):
     orden1 = _crear_orden_abierta(db_session, lider, codigo="TEST-ORD-FILTRO-1")
     orden2 = _crear_orden_abierta(db_session, lider, codigo="TEST-ORD-FILTRO-2")

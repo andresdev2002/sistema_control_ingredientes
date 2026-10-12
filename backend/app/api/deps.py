@@ -36,11 +36,14 @@ def get_current_user(
     return usuario
 
 
-def require_rol(rol: RolUsuario):
-    """Uso: Depends(require_rol(RolUsuario.LIDER))"""
+def require_rol(*roles: RolUsuario):
+    """Uso: Depends(require_rol(RolUsuario.LIDER)) o, para varios roles permitidos,
+    Depends(require_rol(RolUsuario.OPERARIO, RolUsuario.LIDER))"""
+    if not roles:
+        raise ValueError("require_rol necesita al menos un rol")
 
     def checker(usuario: Usuario = Depends(get_current_user)) -> Usuario:
-        if usuario.rol != rol:
+        if usuario.rol not in roles:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tiene permisos para esta acción")
         return usuario
 

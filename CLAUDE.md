@@ -14,7 +14,7 @@ FastAPI, PostgreSQL, SQLAlchemy, Alembic, JWT con bcrypt.
 ## Convenciones
 
 - La lógica de negocio va en services, no en los routers.
-- Los permisos se aplican con `require_rol(...)` desde `app/api/deps.py`.
+- Los permisos se aplican con `require_rol(...)` desde `app/api/deps.py`. Acepta uno o varios roles: `require_rol(RolUsuario.OPERARIO, RolUsuario.LIDER)`.
 - Las contraseñas nunca se devuelven en las respuestas.
 - `registros_consumo` guarda campos snapshot para auditoría.
 - Operaciones que tocan saldos van en una sola transacción.
@@ -38,7 +38,6 @@ Desde `backend/`:
 
 ## Pendientes de diseño
 
-- **Rol CALIDAD en endpoints "Autenticado"**: los endpoints que solo usan `get_current_user` también aceptan a un usuario `CALIDAD`, incluido `POST /consumos`. No se restringió; falta definir si CALIDAD debe poder registrar consumos.
 - **Reingreso de sobrante** (saldo hijo): `saldo.saldo_padre_id` y `registro_consumo.saldo_nuevo_id` existen en el modelo para este flujo, pero quedan `NULL` siempre — el Módulo de consumos solo decrementa el saldo existente, nunca crea un saldo nuevo a partir de lo que sobra. Implementar el reingreso real (reetiquetar el sobrante con su propio código de barras) queda fuera de alcance.
 - **Concurrencia real sin probar**: `with_for_update()` se usa en consumos (orden primero, saldo después, siempre en ese orden) para evitar saldos negativos bajo carrera, pero no hay ningún test con dos conexiones/transacciones reales ejecutando en paralelo — toda la suite usa una sola sesión por test. El comportamiento bajo contención real (bloqueo, orden de espera, posibles deadlocks) no está verificado empíricamente.
 - **Generación de PDF** del formato FO-PFTO-0057: fuera de alcance, ver nota de arriba. `pdf_path` queda `NULL`.
@@ -68,7 +67,7 @@ Todos bajo el prefijo `/api`. "Autenticado" = cualquier usuario activo con token
 | GET | `/ordenes-produccion` | Autenticado |
 | GET | `/ordenes-produccion/{orden_id}` | Autenticado |
 | PATCH | `/ordenes-produccion/{orden_id}` | LIDER |
-| POST | `/consumos` | Autenticado (hoy incluye CALIDAD, ver pendientes) |
+| POST | `/consumos` | OPERARIO o LIDER (CALIDAD recibe 403) |
 | GET | `/consumos` | Autenticado (filtro `orden_produccion_id`) |
 | POST | `/formatos` | LIDER |
 | GET | `/formatos` | Autenticado (filtro `orden_produccion_id`) |
