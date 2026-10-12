@@ -2,6 +2,8 @@ import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import Consumos from './pages/Consumos'
+import FormatoDetalle from './pages/FormatoDetalle'
+import Formatos from './pages/Formatos'
 import Inicio from './pages/Inicio'
 import Login from './pages/Login'
 import Materiales from './pages/Materiales'
@@ -11,6 +13,7 @@ import Ordenes from './pages/Ordenes'
 import Recepciones from './pages/Recepciones'
 import RegistrarConsumo from './pages/RegistrarConsumo'
 import Saldos from './pages/Saldos'
+import Usuarios from './pages/Usuarios'
 
 const LIDER_U_OPERARIO = ['LIDER', 'OPERARIO']
 
@@ -33,6 +36,9 @@ export default function App() {
         <Route path="ordenes/:id" element={<OrdenDetalle />} />
         <Route path="consumos" element={<Consumos />} />
         <Route path="consumos/registrar" element={<ProtectedRoute roles={LIDER_U_OPERARIO}><RegistrarConsumo /></ProtectedRoute>} />
+        <Route path="formatos" element={<Formatos />} />
+        <Route path="formatos/:id" element={<FormatoDetalle />} />
+        <Route path="usuarios" element={<ProtectedRoute roles={['LIDER']}><Usuarios /></ProtectedRoute>} />
         <Route path="*" element={<NoEncontrado />} />
       </Route>
     </Routes>

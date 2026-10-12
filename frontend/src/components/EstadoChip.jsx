@@ -5,6 +5,9 @@ const COLORES = {
   AGOTADO: 'default',
   ABIERTA: 'primary',
   CERRADA: 'default',
+  PENDIENTE: 'warning',
+  FIRMADO_LIDER: 'info',
+  COMPLETO: 'success',
 }
 
 export default function EstadoChip({ estado }) {
