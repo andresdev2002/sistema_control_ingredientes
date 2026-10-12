@@ -149,6 +149,96 @@ Estructura obligatoria en frontend/src:
 
 Ejecutar una fase por sesión/pedido y detenerse al terminarla.
 
+## Frontend
+
+Estado: fases 1 a 5 terminadas en la rama `frontend` (sin push). React 18 + Vite + MUI, JavaScript.
+
+### Instalar y correr
+
+Todo desde Ubuntu (WSL), con el Node de nvm (`which node` debe apuntar a `/home/andres/.nvm/...`, nunca a `/mnt/c`).
+
+1. Backend, desde `backend/`: `./venv_wsl/bin/uvicorn app.main:app` (puerto 8000). Reiniciarlo tras cambios en `main.py`: no corre con `--reload`.
+2. Frontend, desde `frontend/`:
+   - Primera vez: `cp .env.example .env.local` y `npm install`.
+   - `npm run dev` y abrir http://localhost:5173.
+   - Verificación: `npm run build` y `npm run lint` (el template de Vite trae **oxlint**, no ESLint).
+
+### Variables de entorno
+
+- `frontend/.env.local` (gitignored; plantilla en `.env.example`): `VITE_API_URL=http://127.0.0.1:8000/api`.
+- Backend: `CORS_ORIGINS` (lista separada por comas). Por defecto `http://localhost:5173,http://127.0.0.1:5173`. Si el frontend se sirve desde otro origen, hay que agregarlo ahí.
+
+### Estructura de `frontend/src`
+
+- `api/`: `client.js` (fetch, token Bearer, errores en español, 401 → `/login` con "Sesión expirada", 403 → "No tienes permiso para esta acción"), un archivo por recurso y `useCarga.js` (hook de carga con cargando/error/recargar que usan todas las listas).
+- `context/`: `AuthContext.jsx` (provider: usuario, rol, login, logout; al cargar llama `GET /usuarios/me`) y `useAuth.js` (contexto + hook; nombre distinto porque `authContext.js` choca con `AuthContext.jsx` en el disco de Windows, que no distingue mayúsculas).
+- `components/`: Layout, ProtectedRoute, DataTable (maneja los 4 estados), ConfirmDialog, ErrorAlert, LoadingBlock, Mensaje (Snackbar), EstadoChip, Dato, TurnoSelect y formularios/paneles por pantalla.
+- `pages/`: una por pantalla (lista de la sección 3).
+- `utils/formato.js`: decimales (2 decimales, sin floats para decidir), fechas `dd/mm/aaaa hh:mm`, `fecha_vencimiento` partiendo el string, normalizar coma → punto, validaciones básicas.
+- Token en `localStorage` bajo la clave `ingredientes_token`.
+
+### Matriz de pantallas por rol
+
+| Pantalla | Ruta | LIDER | OPERARIO | CALIDAD |
+|---|---|---|---|---|
+| Inicio | `/` | Sí | Sí | Sí |
+| Registrar consumo | `/consumos/registrar` | Sí | Sí | No (Sin acceso) |
+| Órdenes / detalle | `/ordenes`, `/ordenes/:id` | Ver, crear, cerrar, generar formato | Solo ver | Solo ver |
+| Consumos | `/consumos` | Ver | Ver | Ver |
+| Formatos / detalle | `/formatos`, `/formatos/:id` | Ver, firmar como líder | Solo ver | Ver, firmar calidad (si el líder ya firmó) |
+| Materiales | `/materiales` | Ver, crear, editar | Solo ver | No (Sin acceso) |
+| Recepciones | `/recepciones` | Ver, crear | Solo ver | No (Sin acceso) |
+| Saldos | `/saldos` | Ver, filtrar, consultar | Ver, filtrar, consultar | No (Sin acceso) |
+| Usuarios | `/usuarios` | Ver, crear, activar/desactivar (no a sí mismo) | No (Sin acceso) | No (Sin acceso) |
+
+La UI oculta menú y botones; el backend es quien decide. Ruta desconocida → "Página no encontrada".
+
+### Decisiones tomadas en la implementación
+
+- En Registrar consumo, Enter en el campo de código de barras consulta el saldo y pasa el foco al peso (los lectores envían Enter al final); Enter en el peso envía el formulario.
+- `peso_capturado` se muestra tal cual lo devuelve el servidor (sin forzar 2 decimales); los demás decimales pasan por `formatearDecimal`.
+- En Recepciones el material se elige de un Select con los materiales existentes (el 404 por SAP inexistente casi no se da desde la UI, pero se muestra si llega).
+- Consumos y Formatos muestran el código de la orden cruzando con `GET /ordenes-produccion`; si esa carga falla, muestran `ID n`.
+
 ### Pendientes del frontend
 
-- Mostrar nombres en vez de ids de líder (`lider_id`) y calidad (`calidad_id`). Hoy se muestran como ID porque los usuarios no-LIDER no pueden pedir `GET /usuarios`.
+- Mostrar nombres en vez de ids de líder (`lider_id`) y calidad (`calidad_id`), y también de `usuario_id`, `usuario_apertura_id` y `generado_por`. Hoy se muestran como ID porque los usuarios no-LIDER no pueden pedir `GET /usuarios`.
+- Sin pruebas automatizadas del frontend: solo build, lint y el checklist manual de abajo.
+- Menú lateral permanente: en pantallas muy angostas (celular) ocupa espacio; no hay versión responsive.
+- Generación de PDF del formato: fuera de alcance (ver arriba).
+
+### Checklist de pruebas manuales por rol
+
+Requisitos: backend corriendo con CORS, `npm run dev`, y al menos un usuario de cada rol (crearlos como LIDER en Usuarios).
+
+**LIDER**
+1. Login con contraseña incorrecta → "Documento o contraseña incorrectos". Login correcto → Inicio con nombre y rol en la barra; el menú muestra las 9 opciones.
+2. Materiales: crear `MAT-T1` / "Prueba" → Snackbar y fila nueva con unidad KG. Crear `MAT-T1` otra vez → error 409. Editar descripción → Snackbar y fila actualizada.
+3. Recepciones: registrar `MAT-T1`, lote SAP `L1`, lote prov. `P1`, vencimiento cualquiera, cantidad `10,00` → código de barras destacado; "Copiar" copia. Cantidad `0` → error de validación. Repetir un código de barras ya usado → 409.
+4. Saldos: consultar el código copiado → ACTIVO, disponible 10.00. Código inexistente → "Saldo no encontrado". Filtrar por ACTIVO y por `MAT-T1`; filtro sin resultados → "No hay registros".
+5. Órdenes: crear `OP-T1`, turno 1 → chip ABIERTA. Crear `OP-T1` otra vez → 409.
+6. Registrar consumo: orden `OP-T1`, turno 1, escanear/escribir el código + Enter → resumen del saldo y foco en peso. Peso `4,03` + Enter → panel con capturado, redondeado y sobrante del servidor; orden y turno se conservan, código y peso vacíos, foco en código. Consumir el resto exacto del bulto (el sobrante que mostró) → sobrante 0. Volver a escanear el bulto → aviso AGOTADO y Registrar deshabilitado.
+7. Órdenes: "Cerrar" en `OP-T1` → diálogo "Al cerrar no se podrán registrar más consumos" → confirmar → CERRADA; ya no aparece en el selector de Registrar consumo.
+8. Detalle de `OP-T1` → tabla con los consumos → "Generar formato" → Snackbar. Repetir → 409. Crear y cerrar una orden sin consumos y generar → 400.
+9. Formatos: el nuevo aparece PENDIENTE → Ver → "Firmar como líder" → confirmar → FIRMADO_LIDER con `lider_id` y fecha; el botón desaparece. No aparece "Firmar calidad".
+10. Usuarios: crear CALIDAD (sin campo Líder). Crear OPERARIO sin líder → error; con líder → Snackbar. Desactivar ese operario → confirmar → Inactivo. En la fila propia no hay botón. Reactivarlo.
+11. URL inventada `/xyz` → "Página no encontrada". Cerrar sesión → vuelve a `/login`.
+12. Con el backend apagado, abrir cualquier lista → "No se pudo conectar con el servidor" + Reintentar; encender el backend y Reintentar → carga.
+
+**OPERARIO**
+1. Login → menú: Inicio, Registrar consumo, Órdenes, Consumos, Formatos, Materiales, Recepciones, Saldos (sin Usuarios).
+2. Materiales y Recepciones: solo tabla, sin formularios ni botón Editar. Saldos: consulta y filtros funcionan.
+3. Órdenes: sin formulario de crear ni botón Cerrar; detalle sin "Generar formato".
+4. Registrar consumo: con una orden ABIERTA y un bulto ACTIVO, registrar un consumo → panel de resultado. Orden cerrada no aparece en el selector.
+5. Formatos: ver lista y detalle, sin botones de firma.
+6. Ir a `/usuarios` a mano → "Sin acceso".
+
+**CALIDAD**
+1. Login → menú: Inicio, Órdenes, Consumos, Formatos (sin Registrar consumo, Materiales, Recepciones, Saldos ni Usuarios).
+2. Ir a `/saldos`, `/materiales`, `/recepciones`, `/consumos/registrar` y `/usuarios` a mano → "Sin acceso" en cada una.
+3. Órdenes y Consumos: solo lectura.
+4. Formatos: uno PENDIENTE → sin botones. Uno FIRMADO_LIDER → "Firmar calidad" → confirmar → COMPLETO con `calidad_id` y fecha; el botón desaparece.
+
+**Sesión**
+1. Con sesión abierta, borrar en DevTools > Application > Local Storage el valor de `ingredientes_token` y navegar a otra pantalla (o recargar) → `/login` con aviso "Sesión expirada".
+2. Desactivar como LIDER a un usuario con sesión abierta en otra ventana; en esa ventana, la siguiente petición lo lleva a `/login` con "Sesión expirada".

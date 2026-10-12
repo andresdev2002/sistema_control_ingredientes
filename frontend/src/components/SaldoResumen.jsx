@@ -1,17 +1,7 @@
-import { Alert, Box, Typography } from '@mui/material'
+import { Alert, Box } from '@mui/material'
 import { formatearDecimal, formatearFecha } from '../utils/formato'
 import EstadoChip from './EstadoChip'
-
-function Dato({ titulo, children }) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary">
-        {titulo}
-      </Typography>
-      <Typography component="div">{children}</Typography>
-    </Box>
-  )
-}
+import Dato from './Dato'
 
 export default function SaldoResumen({ saldo, descripcion }) {
   return (

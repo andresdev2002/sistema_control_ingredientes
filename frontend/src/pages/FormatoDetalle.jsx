@@ -10,6 +10,7 @@ import LoadingBlock from '../components/LoadingBlock'
 import Mensaje from '../components/Mensaje'
 import { useAuth } from '../context/useAuth'
 import { formatearFechaHora } from '../utils/formato'
+import Dato from '../components/Dato'
 
 const FIRMAS = {
   lider: {
@@ -24,17 +25,6 @@ const FIRMAS = {
     accion: firmarCalidad,
     exito: 'Formato firmado por calidad',
   },
-}
-
-function Dato({ titulo, children }) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary">
-        {titulo}
-      </Typography>
-      <Typography component="div">{children}</Typography>
-    </Box>
-  )
 }
 
 function Firma({ titulo, firmado, usuarioId, fecha }) {

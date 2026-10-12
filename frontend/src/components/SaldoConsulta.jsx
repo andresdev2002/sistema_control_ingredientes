@@ -5,17 +5,7 @@ import { formatearDecimal, formatearFecha, formatearFechaHora } from '../utils/f
 import ErrorAlert from './ErrorAlert'
 import EstadoChip from './EstadoChip'
 import LoadingBlock from './LoadingBlock'
-
-function Dato({ titulo, children }) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary">
-        {titulo}
-      </Typography>
-      <Typography>{children}</Typography>
-    </Box>
-  )
-}
+import Dato from './Dato'
 
 export default function SaldoConsulta() {
   const [codigo, setCodigo] = useState('')

@@ -1,11 +1,11 @@
 const API_URL = import.meta.env.VITE_API_URL
 const TOKEN_KEY = 'ingredientes_token'
 
-export const MENSAJE_403 = 'No tienes permiso para esta acción'
+const MENSAJE_403 = 'No tienes permiso para esta acción'
 
 let manejarSesionExpirada = null
 
-export class ApiError extends Error {
+class ApiError extends Error {
   constructor(mensaje, status) {
     super(mensaje)
     this.name = 'ApiError'

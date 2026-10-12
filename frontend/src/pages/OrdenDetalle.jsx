@@ -12,17 +12,7 @@ import LoadingBlock from '../components/LoadingBlock'
 import Mensaje from '../components/Mensaje'
 import { useAuth } from '../context/useAuth'
 import { formatearFechaHora } from '../utils/formato'
-
-function Dato({ titulo, children }) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary">
-        {titulo}
-      </Typography>
-      <Typography component="div">{children}</Typography>
-    </Box>
-  )
-}
+import Dato from '../components/Dato'
 
 export default function OrdenDetalle() {
   const { id } = useParams()
