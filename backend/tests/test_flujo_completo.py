@@ -1,7 +1,8 @@
 """Test de flujo completo end-to-end, usando los endpoints reales (no ORM directo):
 LIDER crea operario, material, recepción y orden -> operario registra consumo ->
 LIDER cierra la orden -> LIDER genera el formato -> firmar-calidad antes de
-firmar-lider da 400 -> firmar-lider y firmar-calidad dan 200 y estado queda COMPLETO.
+firmar-lider da 400 -> LIDER firma -> un LIDER no puede firmar calidad (403) ->
+el usuario CALIDAD firma, queda calidad_id y estado COMPLETO.
 
 Todos los datos creados en este test están prefijados con TEST-.
 """
@@ -30,6 +31,27 @@ def test_flujo_completo_operario_material_recepcion_orden_consumo_formato(client
     assert resp_login.status_code == 200
     operario_token = resp_login.json()["access_token"]
     operario_headers = {"Authorization": f"Bearer {operario_token}"}
+
+    # 1b. LIDER crea un usuario CALIDAD (sin lider_id) y este hace login real
+    resp_calidad = client.post(
+        "/api/usuarios",
+        json={
+            "nombre": "TEST-Calidad-Flujo",
+            "documento": "TEST-FLUJO-CALIDAD-1",
+            "rol": "CALIDAD",
+            "password": "clave-test-flujo",
+        },
+        headers=lider_headers,
+    )
+    assert resp_calidad.status_code == 201
+    calidad_id = resp_calidad.json()["id"]
+
+    resp_login_calidad = client.post(
+        "/api/auth/login",
+        json={"documento": "TEST-FLUJO-CALIDAD-1", "password": "clave-test-flujo"},
+    )
+    assert resp_login_calidad.status_code == 200
+    calidad_headers = {"Authorization": f"Bearer {resp_login_calidad.json()['access_token']}"}
 
     # 2. LIDER crea el material
     resp_material = client.post(
@@ -97,7 +119,7 @@ def test_flujo_completo_operario_material_recepcion_orden_consumo_formato(client
     assert resp_formato.json()["estado"] == "PENDIENTE"
 
     # 8. firmar-calidad antes de firmar-lider -> 400
-    resp_calidad_antes = client.post(f"/api/formatos/{formato_id}/firmar-calidad", headers=lider_headers)
+    resp_calidad_antes = client.post(f"/api/formatos/{formato_id}/firmar-calidad", headers=calidad_headers)
     assert resp_calidad_antes.status_code == 400
 
     # 9. firmar-lider -> 200
@@ -105,9 +127,14 @@ def test_flujo_completo_operario_material_recepcion_orden_consumo_formato(client
     assert resp_firma_lider.status_code == 200
     assert resp_firma_lider.json()["estado"] == "FIRMADO_LIDER"
 
-    # 10. firmar-calidad -> 200, estado COMPLETO
-    resp_firma_calidad = client.post(f"/api/formatos/{formato_id}/firmar-calidad", headers=lider_headers)
+    # 10. un LIDER ya no puede firmar calidad -> 403
+    resp_calidad_lider = client.post(f"/api/formatos/{formato_id}/firmar-calidad", headers=lider_headers)
+    assert resp_calidad_lider.status_code == 403
+
+    # 11. el usuario CALIDAD firma -> 200, estado COMPLETO y calidad_id guardado
+    resp_firma_calidad = client.post(f"/api/formatos/{formato_id}/firmar-calidad", headers=calidad_headers)
     assert resp_firma_calidad.status_code == 200
     assert resp_firma_calidad.json()["estado"] == "COMPLETO"
     assert resp_firma_calidad.json()["firmado_lider"] is True
     assert resp_firma_calidad.json()["firmado_calidad"] is True
+    assert resp_firma_calidad.json()["calidad_id"] == calidad_id

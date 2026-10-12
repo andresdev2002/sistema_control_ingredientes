@@ -102,7 +102,9 @@ def test_listar_y_consultar_formato_cualquier_autenticado(
     assert resp_consultar.json()["id"] == creado["id"]
 
 
-def test_firmar_lider_luego_calidad_queda_completo(client, lider_headers, lider, db_session, material):
+def test_firmar_lider_luego_calidad_queda_completo(
+    client, lider_headers, calidad_headers, lider, calidad, db_session, material
+):
     orden = _crear_orden_cerrada_con_consumo(client, db_session, lider, lider_headers, material, "TEST-ORD-FMT-3")
     creado = client.post("/api/formatos", json={"orden_produccion_id": orden.id}, headers=lider_headers).json()
 
@@ -114,10 +116,11 @@ def test_firmar_lider_luego_calidad_queda_completo(client, lider_headers, lider,
     assert data_lider["fecha_firma_lider"] is not None
     assert data_lider["estado"] == "FIRMADO_LIDER"
 
-    resp_calidad = client.post(f"/api/formatos/{creado['id']}/firmar-calidad", headers=lider_headers)
+    resp_calidad = client.post(f"/api/formatos/{creado['id']}/firmar-calidad", headers=calidad_headers)
     assert resp_calidad.status_code == 200
     data_calidad = resp_calidad.json()
     assert data_calidad["firmado_calidad"] is True
+    assert data_calidad["calidad_id"] == calidad.id
     assert data_calidad["fecha_firma_calidad"] is not None
     assert data_calidad["estado"] == "COMPLETO"
 
@@ -174,13 +177,15 @@ def test_generar_formato_no_cierra_ni_modifica_orden(client, lider_headers, lide
     assert orden_despues == orden_antes
 
 
-def test_firmar_calidad_sin_firma_lider_previa_400(client, lider_headers, lider, db_session, material):
+def test_firmar_calidad_sin_firma_lider_previa_400(
+    client, lider_headers, calidad_headers, lider, db_session, material
+):
     orden = _crear_orden_cerrada_con_consumo(
         client, db_session, lider, lider_headers, material, "TEST-ORD-FMT-SIN-LIDER"
     )
     creado = client.post("/api/formatos", json={"orden_produccion_id": orden.id}, headers=lider_headers).json()
 
-    resp = client.post(f"/api/formatos/{creado['id']}/firmar-calidad", headers=lider_headers)
+    resp = client.post(f"/api/formatos/{creado['id']}/firmar-calidad", headers=calidad_headers)
     assert resp.status_code == 400
 
 
@@ -193,15 +198,16 @@ def test_firmar_lider_dos_veces_409(client, lider_headers, lider, db_session, ma
     assert resp.status_code == 409
 
 
-def test_firmar_calidad_dos_veces_409(client, lider_headers, lider, db_session, material):
+def test_firmar_calidad_dos_veces_409(client, lider_headers, calidad_headers, lider, db_session, material):
     orden = _crear_orden_cerrada_con_consumo(
         client, db_session, lider, lider_headers, material, "TEST-ORD-FMT-2XCALIDAD"
     )
     creado = client.post("/api/formatos", json={"orden_produccion_id": orden.id}, headers=lider_headers).json()
 
     client.post(f"/api/formatos/{creado['id']}/firmar-lider", headers=lider_headers)
-    client.post(f"/api/formatos/{creado['id']}/firmar-calidad", headers=lider_headers)
-    resp = client.post(f"/api/formatos/{creado['id']}/firmar-calidad", headers=lider_headers)
+    resp1 = client.post(f"/api/formatos/{creado['id']}/firmar-calidad", headers=calidad_headers)
+    assert resp1.status_code == 200
+    resp = client.post(f"/api/formatos/{creado['id']}/firmar-calidad", headers=calidad_headers)
     assert resp.status_code == 409
 
 
@@ -235,6 +241,80 @@ def test_firmar_calidad_como_operario_403(client, operario_headers, lider, lider
     assert resp.status_code == 403
 
 
+def test_firmar_calidad_como_lider_403(client, lider_headers, lider, db_session, material):
+    orden = _crear_orden_cerrada_con_consumo(
+        client, db_session, lider, lider_headers, material, "TEST-ORD-FMT-CALIDAD-LIDER"
+    )
+    creado = client.post("/api/formatos", json={"orden_produccion_id": orden.id}, headers=lider_headers).json()
+    client.post(f"/api/formatos/{creado['id']}/firmar-lider", headers=lider_headers)
+
+    resp = client.post(f"/api/formatos/{creado['id']}/firmar-calidad", headers=lider_headers)
+    assert resp.status_code == 403
+
+    sin_firma = client.get(f"/api/formatos/{creado['id']}", headers=lider_headers).json()
+    assert sin_firma["firmado_calidad"] is False
+    assert sin_firma["calidad_id"] is None
+
+
+def test_firmar_calidad_guarda_calidad_id(
+    client, lider_headers, operario_headers, calidad_headers, lider, calidad, db_session, material
+):
+    orden = _crear_orden_cerrada_con_consumo(
+        client, db_session, lider, lider_headers, material, "TEST-ORD-FMT-CALIDAD-ID"
+    )
+    creado = client.post("/api/formatos", json={"orden_produccion_id": orden.id}, headers=lider_headers).json()
+    assert creado["calidad_id"] is None
+
+    client.post(f"/api/formatos/{creado['id']}/firmar-lider", headers=lider_headers)
+    client.post(f"/api/formatos/{creado['id']}/firmar-calidad", headers=calidad_headers)
+
+    listado = client.get("/api/formatos", params={"orden_produccion_id": orden.id}, headers=operario_headers).json()
+    assert len(listado) == 1
+    assert listado[0]["calidad_id"] == calidad.id
+    assert listado[0]["lider_id"] == lider.id
+    assert listado[0]["estado"] == "COMPLETO"
+
+
+def test_firmar_lider_como_calidad_403(client, lider_headers, calidad_headers, lider, db_session, material):
+    orden = _crear_orden_cerrada_con_consumo(
+        client, db_session, lider, lider_headers, material, "TEST-ORD-FMT-LIDER-CALIDAD"
+    )
+    creado = client.post("/api/formatos", json={"orden_produccion_id": orden.id}, headers=lider_headers).json()
+
+    resp = client.post(f"/api/formatos/{creado['id']}/firmar-lider", headers=calidad_headers)
+    assert resp.status_code == 403
+
+
+def test_crear_usuario_calidad_sin_lider_id(client, lider_headers):
+    resp = client.post(
+        "/api/usuarios",
+        json={
+            "nombre": "TEST-Calidad-Nuevo",
+            "documento": "TEST-CALIDAD-NUEVO-1",
+            "rol": "CALIDAD",
+            "password": "clave-test",
+        },
+        headers=lider_headers,
+    )
+    assert resp.status_code == 201
+    assert resp.json()["rol"] == "CALIDAD"
+    assert resp.json()["lider_id"] is None
+
+
+def test_crear_usuario_calidad_como_calidad_403(client, calidad_headers):
+    resp = client.post(
+        "/api/usuarios",
+        json={
+            "nombre": "TEST-Calidad-Otro",
+            "documento": "TEST-CALIDAD-OTRO-1",
+            "rol": "CALIDAD",
+            "password": "clave-test",
+        },
+        headers=calidad_headers,
+    )
+    assert resp.status_code == 403
+
+
 def test_consultar_formato_inexistente_404(client, lider_headers):
     resp = client.get("/api/formatos/999999", headers=lider_headers)
     assert resp.status_code == 404
@@ -245,8 +325,8 @@ def test_firmar_lider_formato_inexistente_404(client, lider_headers):
     assert resp.status_code == 404
 
 
-def test_firmar_calidad_formato_inexistente_404(client, lider_headers):
-    resp = client.post("/api/formatos/999999/firmar-calidad", headers=lider_headers)
+def test_firmar_calidad_formato_inexistente_404(client, calidad_headers):
+    resp = client.post("/api/formatos/999999/firmar-calidad", headers=calidad_headers)
     assert resp.status_code == 404
 
 

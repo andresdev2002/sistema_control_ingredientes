@@ -20,6 +20,7 @@ class FormatoResponse(BaseModel):
     lider_id: Optional[int]
     fecha_firma_lider: Optional[datetime]
     firmado_calidad: bool
+    calidad_id: Optional[int]
     fecha_firma_calidad: Optional[datetime]
     pdf_path: Optional[str]
 

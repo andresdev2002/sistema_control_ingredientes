@@ -68,6 +68,20 @@ def operario(db_session, lider):
 
 
 @pytest.fixture()
+def calidad(db_session):
+    usuario = Usuario(
+        nombre="TEST-Calidad",
+        documento="TEST-CALIDAD-001",
+        rol=RolUsuario.CALIDAD,
+        password_hash=hash_password("clave-test"),
+        lider_id=None,
+    )
+    db_session.add(usuario)
+    db_session.flush()
+    return usuario
+
+
+@pytest.fixture()
 def material(db_session):
     material = MaterialMaestro(
         codigo_sap="TEST-MAT-001",
@@ -92,3 +106,8 @@ def lider_headers(lider):
 @pytest.fixture()
 def operario_headers(operario):
     return auth_header(operario)
+
+
+@pytest.fixture()
+def calidad_headers(calidad):
+    return auth_header(calidad)

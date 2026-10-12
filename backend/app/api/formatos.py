@@ -77,10 +77,10 @@ def firmar_lider_endpoint(
 def firmar_calidad_endpoint(
     formato_id: int,
     db: Session = Depends(get_db),
-    _: Usuario = Depends(require_rol(RolUsuario.LIDER)),
+    usuario_actual: Usuario = Depends(require_rol(RolUsuario.CALIDAD)),
 ):
     try:
-        return firmar_calidad(db, formato_id)
+        return firmar_calidad(db, formato_id, usuario_actual.id)
     except LookupError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:

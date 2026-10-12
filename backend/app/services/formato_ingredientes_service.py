@@ -1,9 +1,6 @@
 """Lógica de negocio sobre formatos_fo_pfto_0057: generación (solo datos, sin PDF),
-consulta y firmas (líder y calidad).
-
-Firma de calidad: por decisión de negocio, hoy también la marca un LIDER (no existe
-rol CALIDAD ni un campo en el modelo para registrar quién firmó esa parte) — queda
-anotado como pendiente de diseño en CLAUDE.md, no se inventan campos nuevos aquí."""
+consulta y firmas (líder y calidad). La firma de calidad la hace un usuario con rol
+CALIDAD y queda registrado en calidad_id."""
 
 from datetime import datetime
 from typing import List, Optional
@@ -93,7 +90,7 @@ def firmar_lider(db: Session, formato_id: int, lider_id: int) -> FormatoIngredie
     return formato
 
 
-def firmar_calidad(db: Session, formato_id: int) -> FormatoIngredientes:
+def firmar_calidad(db: Session, formato_id: int, calidad_id: int) -> FormatoIngredientes:
     """Lanza LookupError si no existe, ValueError si falta la firma de líder previa,
     FirmaDuplicadaError si ya fue firmado por calidad."""
     formato = obtener_formato_por_id(db, formato_id)
@@ -104,6 +101,7 @@ def firmar_calidad(db: Session, formato_id: int) -> FormatoIngredientes:
     if formato.firmado_calidad:
         raise FirmaDuplicadaError("El formato ya fue firmado por calidad")
 
+    formato.calidad_id = calidad_id
     formato.firmado_calidad = True
     formato.fecha_firma_calidad = datetime.now()
     db.commit()

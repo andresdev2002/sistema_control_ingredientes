@@ -27,14 +27,18 @@ Desde `backend/`:
 ./venv_wsl/bin/uvicorn app.main:app
 ```
 
+## Decisiones confirmadas
+
+- **Redondeo de peso en consumos** (CONFIRMADO con Symrise): `peso_redondeado = round(peso_capturado / 0.02) * 0.02`, paso `0.02`, modo `ROUND_HALF_UP`. La báscula solo imprime centésimas pares, así que el paso 0.02 coincide con lo que produce el equipo.
+- **Firma de calidad** en `formatos_fo_pfto_0057`: la firma Camilo, con un usuario de rol `CALIDAD`. `POST /formatos/{id}/firmar-calidad` exige `rol=CALIDAD` (un LIDER recibe 403) y guarda su id en `calidad_id` (FK a `usuarios`, migración `a7c3e1d94b20`). Sigue exigiendo la firma de líder previa (400) y no permite firmar dos veces (409). Un usuario `CALIDAD` no requiere `lider_id`.
+
 ## Supuestos pendientes de confirmar con Symrise
 
-- **Redondeo de peso en consumos**: `peso_redondeado = round(peso_capturado / 0.02) * 0.02`, con modo `ROUND_HALF_UP` y paso `0.02`. El paso y la forma de la fórmula salen del comentario en `app/models/registro_consumo.py`, pero el **modo de redondeo en empates fue supuesto** (Python's `round()` nativo usa banker's rounding, no se usó). También se supuso que un `peso_capturado` que redondea a `0.00` debe rechazarse (400) — no está escrito en ningún lado, es una extensión de la regla general "cantidades > 0".
-- **Firma de calidad** en `formatos_fo_pfto_0057`: la marca cualquier `LIDER` activo, sin registrar quién (el modelo no tiene rol `CALIDAD` ni un campo `calidad_id`). Decisión de negocio temporal, confirmada por el usuario para esta fase, pero sigue pendiente de validar si Symrise requiere un rol o identidad real para esta firma.
+- Un `peso_capturado` que redondea a `0.00` se rechaza (400). No está escrito en ningún lado, es una extensión de la regla general "cantidades > 0".
 
 ## Pendientes de diseño
 
-- Firma de "calidad" en `formatos_fo_pfto_0057`: el modelo no tiene rol `CALIDAD` ni un campo para registrar quién firmó esa parte (solo `firmado_calidad` + `fecha_firma_calidad`, sin FK a usuario). Por decisión de negocio temporal, hoy la marca cualquier `LIDER` activo, igual que la firma de líder, pero sin guardar su identidad. Si se agrega un rol `CALIDAD` real, esto requerirá tocar el modelo (`lider_id`-equivalente para calidad) y una migración.
+- **Rol CALIDAD en endpoints "Autenticado"**: los endpoints que solo usan `get_current_user` también aceptan a un usuario `CALIDAD`, incluido `POST /consumos`. No se restringió; falta definir si CALIDAD debe poder registrar consumos.
 - **Reingreso de sobrante** (saldo hijo): `saldo.saldo_padre_id` y `registro_consumo.saldo_nuevo_id` existen en el modelo para este flujo, pero quedan `NULL` siempre — el Módulo de consumos solo decrementa el saldo existente, nunca crea un saldo nuevo a partir de lo que sobra. Implementar el reingreso real (reetiquetar el sobrante con su propio código de barras) queda fuera de alcance.
 - **Concurrencia real sin probar**: `with_for_update()` se usa en consumos (orden primero, saldo después, siempre en ese orden) para evitar saldos negativos bajo carrera, pero no hay ningún test con dos conexiones/transacciones reales ejecutando en paralelo — toda la suite usa una sola sesión por test. El comportamiento bajo contención real (bloqueo, orden de espera, posibles deadlocks) no está verificado empíricamente.
 - **Generación de PDF** del formato FO-PFTO-0057: fuera de alcance, ver nota de arriba. `pdf_path` queda `NULL`.
@@ -43,7 +47,7 @@ Desde `backend/`:
 
 ## Endpoints existentes
 
-Todos bajo el prefijo `/api`. "Autenticado" = cualquier usuario activo con token válido (operario o líder); "LIDER" = requiere además `rol=LIDER`.
+Todos bajo el prefijo `/api`. "Autenticado" = cualquier usuario activo con token válido (operario, líder o calidad); "LIDER"/"CALIDAD" = requiere además ese rol.
 
 | Método | Ruta | Rol permitido |
 |---|---|---|
@@ -64,10 +68,10 @@ Todos bajo el prefijo `/api`. "Autenticado" = cualquier usuario activo con token
 | GET | `/ordenes-produccion` | Autenticado |
 | GET | `/ordenes-produccion/{orden_id}` | Autenticado |
 | PATCH | `/ordenes-produccion/{orden_id}` | LIDER |
-| POST | `/consumos` | Autenticado (operario o líder) |
+| POST | `/consumos` | Autenticado (hoy incluye CALIDAD, ver pendientes) |
 | GET | `/consumos` | Autenticado (filtro `orden_produccion_id`) |
 | POST | `/formatos` | LIDER |
 | GET | `/formatos` | Autenticado (filtro `orden_produccion_id`) |
 | GET | `/formatos/{formato_id}` | Autenticado |
 | POST | `/formatos/{formato_id}/firmar-lider` | LIDER |
-| POST | `/formatos/{formato_id}/firmar-calidad` | LIDER |
+| POST | `/formatos/{formato_id}/firmar-calidad` | CALIDAD |
