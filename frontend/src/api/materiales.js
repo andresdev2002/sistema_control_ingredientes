@@ -11,3 +11,7 @@ export function crearMaterial(datos) {
 export function actualizarMaterial(codigoSap, datos) {
   return request(`/material-maestro/${encodeURIComponent(codigoSap)}`, { method: 'PATCH', body: datos })
 }
+
+export function obtenerMaterial(codigoSap) {
+  return request(`/material-maestro/${encodeURIComponent(codigoSap)}`)
+}

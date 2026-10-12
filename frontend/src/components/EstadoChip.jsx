@@ -3,6 +3,8 @@ import { Chip } from '@mui/material'
 const COLORES = {
   ACTIVO: 'success',
   AGOTADO: 'default',
+  ABIERTA: 'primary',
+  CERRADA: 'default',
 }
 
 export default function EstadoChip({ estado }) {
