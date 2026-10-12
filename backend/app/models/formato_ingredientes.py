@@ -19,6 +19,7 @@ class FormatoIngredientes(Base):
     fecha_firma_lider = Column(DateTime(timezone=False), nullable=True)
 
     firmado_calidad = Column(Boolean, nullable=False, default=False)
+    calidad_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     fecha_firma_calidad = Column(DateTime(timezone=False), nullable=True)
 
     pdf_path = Column(String(255), nullable=True)

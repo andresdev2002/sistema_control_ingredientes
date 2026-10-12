@@ -12,6 +12,7 @@ class RolUsuario(str, enum.Enum):
     """Debe coincidir exacto con el ENUM rol_usuario de schema.sql."""
     LIDER = "LIDER"
     OPERARIO = "OPERARIO"
+    CALIDAD = "CALIDAD"
 
 
 class Usuario(Base):
