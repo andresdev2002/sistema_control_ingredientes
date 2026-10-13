@@ -23,3 +23,13 @@ export default function useCarga(cargar) {
   const cargando = resultado.cargar !== cargar || resultado.version !== version
   return { datos: resultado.datos, cargando, error: cargando ? '' : resultado.error, recargar }
 }
+
+export function combinarCargas(...cargas) {
+  const cargando = cargas.some((c) => c.cargando)
+  const conError = cargas.filter((c) => c.error)
+  return {
+    cargando,
+    error: conError[0]?.error || '',
+    recargar: () => conError.forEach((c) => c.recargar()),
+  }
+}
