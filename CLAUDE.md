@@ -30,7 +30,7 @@ Desde `backend/`:
 ## Decisiones confirmadas
 
 - **Redondeo de peso en consumos** (CONFIRMADO con Symrise): `peso_redondeado = round(peso_capturado / 0.02) * 0.02`, paso `0.02`, modo `ROUND_HALF_UP`. La báscula solo imprime centésimas pares, así que el paso 0.02 coincide con lo que produce el equipo.
-- **Firma de calidad** en `formatos_fo_pfto_0057`: la firma Camilo, con un usuario de rol `CALIDAD`. `POST /formatos/{id}/firmar-calidad` exige `rol=CALIDAD` (un LIDER recibe 403) y guarda su id en `calidad_id` (FK a `usuarios`, migración `a7c3e1d94b20`). Sigue exigiendo la firma de líder previa (400) y no permite firmar dos veces (409). Un usuario `CALIDAD` no requiere `lider_id`.
+- **Firma de calidad** en `formatos_fo_pfto_0057`: la firma un usuario de rol `CALIDAD`. `POST /formatos/{id}/firmar-calidad` exige `rol=CALIDAD` (un LIDER recibe 403) y guarda su id en `calidad_id` (FK a `usuarios`, migración `a7c3e1d94b20`). Sigue exigiendo la firma de líder previa (400) y no permite firmar dos veces (409). Un usuario `CALIDAD` no requiere `lider_id`.
 
 ## Supuestos pendientes de confirmar con Symrise
 
