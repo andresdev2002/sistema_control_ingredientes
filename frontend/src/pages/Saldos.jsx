@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react'
-import { Box, Button, MenuItem, TextField, Typography } from '@mui/material'
+import { Box, Button, MenuItem, TextField } from '@mui/material'
 import { listarSaldos } from '../api/saldos'
 import useCarga from '../api/useCarga'
 import DataTable from '../components/DataTable'
 import EstadoChip from '../components/EstadoChip'
 import SaldoConsulta from '../components/SaldoConsulta'
 import { formatearDecimal, formatearFecha } from '../utils/formato'
+import PageHeader from '../components/PageHeader'
 
 const COLUMNAS = [
   { campo: 'codigo_barras', titulo: 'Código de barras' },
@@ -32,9 +33,7 @@ export default function Saldos() {
 
   return (
     <>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Saldos
-      </Typography>
+      <PageHeader titulo="Saldos" descripcion="Cantidad disponible de cada bulto en almacén." />
       <SaldoConsulta />
       <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
         <TextField id="filtro-estado" select label="Estado" value={estado} onChange={(e) => setEstado(e.target.value)} size="small" sx={{ minWidth: 160 }}>

@@ -1,15 +1,19 @@
-import { Button, Typography } from '@mui/material'
+import { Button } from '@mui/material'
 import { Link } from 'react-router-dom'
+import PageHeader from '../components/PageHeader'
 
 export default function NoEncontrado() {
   return (
     <>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Página no encontrada
-      </Typography>
-      <Button component={Link} to="/" variant="outlined">
-        Volver al inicio
-      </Button>
+      <PageHeader
+        titulo="Página no encontrada"
+        descripcion="La dirección no corresponde a ninguna pantalla."
+        accion={
+          <Button component={Link} to="/" variant="outlined">
+            Volver al inicio
+          </Button>
+        }
+      />
     </>
   )
 }

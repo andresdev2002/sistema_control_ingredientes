@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Button, Typography } from '@mui/material'
+import { Button } from '@mui/material'
 import { Link } from 'react-router-dom'
 import { listarFormatos } from '../api/formatos'
 import { listarOrdenes } from '../api/ordenes'
@@ -7,6 +7,7 @@ import useCarga from '../api/useCarga'
 import DataTable from '../components/DataTable'
 import EstadoChip from '../components/EstadoChip'
 import { formatearFechaHora } from '../utils/formato'
+import PageHeader from '../components/PageHeader'
 
 export default function Formatos() {
   const formatos = useCarga(listarFormatos)
@@ -39,9 +40,7 @@ export default function Formatos() {
 
   return (
     <>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Formatos FO-PFTO-0057
-      </Typography>
+      <PageHeader titulo="Formatos FO-PFTO-0057" descripcion="Formatos generados al cerrar órdenes y el estado de sus firmas." />
       <DataTable
         columnas={columnas}
         filas={formatos.datos}

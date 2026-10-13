@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Typography } from '@mui/material'
 import { listarRecepciones } from '../api/recepciones'
 import useCarga from '../api/useCarga'
 import CodigoBarrasDestacado from '../components/CodigoBarrasDestacado'
@@ -8,6 +7,7 @@ import Mensaje from '../components/Mensaje'
 import RecepcionForm from '../components/RecepcionForm'
 import { useAuth } from '../context/useAuth'
 import { formatearDecimal, formatearFecha, formatearFechaHora } from '../utils/formato'
+import PageHeader from '../components/PageHeader'
 
 const COLUMNAS = [
   { campo: 'codigo_barras', titulo: 'Código de barras' },
@@ -28,9 +28,7 @@ export default function Recepciones() {
 
   return (
     <>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Recepciones
-      </Typography>
+      <PageHeader titulo="Recepciones" descripcion="Bultos recibidos en almacén con su código de barras." />
       {rol === 'LIDER' && (
         <RecepcionForm
           onCreada={(recepcion) => {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Button, Typography } from '@mui/material'
+import { Box, Button } from '@mui/material'
 import { Link } from 'react-router-dom'
 import { cerrarOrden, listarOrdenes } from '../api/ordenes'
 import useCarga from '../api/useCarga'
@@ -11,6 +11,7 @@ import Mensaje from '../components/Mensaje'
 import OrdenCrearForm from '../components/OrdenCrearForm'
 import { useAuth } from '../context/useAuth'
 import { formatearFechaHora } from '../utils/formato'
+import PageHeader from '../components/PageHeader'
 
 export default function Ordenes() {
   const { rol } = useAuth()
@@ -64,9 +65,10 @@ export default function Ordenes() {
 
   return (
     <>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Órdenes de producción
-      </Typography>
+      <PageHeader
+        titulo="Órdenes de producción"
+        descripcion={esLider ? 'Abre, consulta y cierra órdenes de producción.' : 'Consulta las órdenes de producción y sus consumos.'}
+      />
       {esLider && (
         <OrdenCrearForm
           onCreada={(orden) => {

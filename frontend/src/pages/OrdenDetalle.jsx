@@ -13,6 +13,7 @@ import Mensaje from '../components/Mensaje'
 import { useAuth } from '../context/useAuth'
 import { formatearFechaHora } from '../utils/formato'
 import Dato from '../components/Dato'
+import PageHeader from '../components/PageHeader'
 
 export default function OrdenDetalle() {
   const { id } = useParams()
@@ -47,9 +48,19 @@ export default function OrdenDetalle() {
       <ErrorAlert mensaje={orden.error} onReintentar={orden.recargar} />
       {!orden.cargando && orden.datos && (
         <>
-          <Typography variant="h5" component="h1" gutterBottom>
-            Orden {orden.datos.codigo_orden}
-          </Typography>
+          <PageHeader
+            titulo={`Orden ${orden.datos.codigo_orden}`}
+            descripcion="Datos de la orden y consumos registrados."
+            accion={
+              rol === 'LIDER' &&
+              orden.datos.estado === 'CERRADA' && (
+                <Button variant="contained" onClick={handleGenerar} disabled={generando}>
+                  {generando ? 'Generando…' : 'Generar formato'}
+                </Button>
+              )
+            }
+          />
+          <ErrorAlert mensaje={errorAccion} />
           <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 2 }}>
               <Dato titulo="Estado">
@@ -61,12 +72,6 @@ export default function OrdenDetalle() {
               <Dato titulo="Apertura">{formatearFechaHora(orden.datos.fecha_apertura)}</Dato>
               <Dato titulo="Cierre">{formatearFechaHora(orden.datos.fecha_cierre)}</Dato>
             </Box>
-            {rol === 'LIDER' && orden.datos.estado === 'CERRADA' && (
-              <Button variant="contained" sx={{ mt: 2 }} onClick={handleGenerar} disabled={generando}>
-                {generando ? 'Generando…' : 'Generar formato'}
-              </Button>
-            )}
-            <ErrorAlert mensaje={errorAccion} />
           </Paper>
           <Typography variant="h6" component="h2" gutterBottom>
             Consumos

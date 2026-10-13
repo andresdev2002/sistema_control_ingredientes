@@ -1,18 +1,19 @@
-import { Button, Typography } from '@mui/material'
+import { Button } from '@mui/material'
 import { Link } from 'react-router-dom'
+import PageHeader from '../components/PageHeader'
 
 export default function SinAcceso() {
   return (
     <>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Sin acceso
-      </Typography>
-      <Typography color="text.secondary" gutterBottom>
-        Tu rol no tiene acceso a esta pantalla.
-      </Typography>
-      <Button component={Link} to="/" variant="outlined">
-        Volver al inicio
-      </Button>
+      <PageHeader
+        titulo="Sin acceso"
+        descripcion="Tu rol no tiene acceso a esta pantalla."
+        accion={
+          <Button component={Link} to="/" variant="outlined">
+            Volver al inicio
+          </Button>
+        }
+      />
     </>
   )
 }

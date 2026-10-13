@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Alert, Box, Button, MenuItem, Paper, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, MenuItem, Paper, TextField } from '@mui/material'
 import { registrarConsumo } from '../api/consumos'
 import { obtenerMaterial } from '../api/materiales'
 import { listarOrdenes } from '../api/ordenes'
@@ -12,6 +12,7 @@ import Mensaje from '../components/Mensaje'
 import SaldoResumen from '../components/SaldoResumen'
 import TurnoSelect from '../components/TurnoSelect'
 import { esNumeroPositivo, normalizarDecimal } from '../utils/formato'
+import PageHeader from '../components/PageHeader'
 
 const SIN_SALDO = { codigo: '', datos: null, descripcion: '', error: '', cargando: false }
 
@@ -114,9 +115,7 @@ export default function RegistrarConsumo() {
 
   return (
     <>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Registrar consumo
-      </Typography>
+      <PageHeader titulo="Registrar consumo" descripcion="Escanea el bulto, captura el peso de la báscula y registra." />
       {resultado && (
         <ConsumoResultado consumo={resultado.consumo} codigoBarras={resultado.codigoBarras} onCerrar={() => setResultado(null)} />
       )}

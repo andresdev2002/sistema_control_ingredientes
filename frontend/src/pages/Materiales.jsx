@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Typography } from '@mui/material'
+import { Button } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import { listarMateriales } from '../api/materiales'
 import useCarga from '../api/useCarga'
@@ -8,6 +8,7 @@ import MaterialCrearForm from '../components/MaterialCrearForm'
 import MaterialEditarDialog from '../components/MaterialEditarDialog'
 import Mensaje from '../components/Mensaje'
 import { useAuth } from '../context/useAuth'
+import PageHeader from '../components/PageHeader'
 
 export default function Materiales() {
   const { rol } = useAuth()
@@ -35,9 +36,7 @@ export default function Materiales() {
 
   return (
     <>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Materiales
-      </Typography>
+      <PageHeader titulo="Materiales" descripcion="Catálogo de materiales por código SAP." />
       {esLider && (
         <MaterialCrearForm
           onCreado={(material) => {

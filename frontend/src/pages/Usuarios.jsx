@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Chip, Typography } from '@mui/material'
+import { Button, Chip } from '@mui/material'
 import { cambiarEstadoUsuario, listarUsuarios } from '../api/usuarios'
 import useCarga from '../api/useCarga'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -9,6 +9,7 @@ import Mensaje from '../components/Mensaje'
 import UsuarioCrearForm from '../components/UsuarioCrearForm'
 import { useAuth } from '../context/useAuth'
 import { formatearFechaHora } from '../utils/formato'
+import PageHeader from '../components/PageHeader'
 
 export default function Usuarios() {
   const { usuario: actual } = useAuth()
@@ -61,9 +62,7 @@ export default function Usuarios() {
 
   return (
     <>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Usuarios
-      </Typography>
+      <PageHeader titulo="Usuarios" descripcion="Crea usuarios y activa o desactiva su acceso." />
       <UsuarioCrearForm
         lideres={lideres}
         onCreado={(usuario) => {

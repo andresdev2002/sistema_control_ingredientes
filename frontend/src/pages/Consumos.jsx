@@ -1,12 +1,17 @@
 import { useCallback, useMemo, useState } from 'react'
-import { MenuItem, TextField, Typography } from '@mui/material'
+import { Button, MenuItem, TextField } from '@mui/material'
 import { listarConsumos } from '../api/consumos'
 import { listarOrdenes } from '../api/ordenes'
 import useCarga from '../api/useCarga'
 import ConsumosTabla from '../components/ConsumosTabla'
 import ErrorAlert from '../components/ErrorAlert'
+import { useAuth } from '../context/useAuth'
+import ScaleIcon from '@mui/icons-material/Scale'
+import { Link } from 'react-router-dom'
+import PageHeader from '../components/PageHeader'
 
 export default function Consumos() {
+  const { rol } = useAuth()
   const [ordenId, setOrdenId] = useState('')
   const ordenes = useCarga(listarOrdenes)
   const cargar = useCallback(() => listarConsumos(ordenId), [ordenId])
@@ -26,9 +31,17 @@ export default function Consumos() {
 
   return (
     <>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Consumos
-      </Typography>
+      <PageHeader
+        titulo="Consumos"
+        descripcion="Pesajes registrados contra las órdenes de producción."
+        accion={
+          rol !== 'CALIDAD' && (
+            <Button component={Link} to="/consumos/registrar" variant="contained" startIcon={<ScaleIcon />}>
+              Registrar consumo
+            </Button>
+          )
+        }
+      />
       <ErrorAlert mensaje={ordenes.error} onReintentar={ordenes.recargar} />
       <TextField
         id="filtro-orden"

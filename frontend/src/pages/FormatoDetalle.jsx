@@ -11,6 +11,7 @@ import Mensaje from '../components/Mensaje'
 import { useAuth } from '../context/useAuth'
 import { formatearFechaHora } from '../utils/formato'
 import Dato from '../components/Dato'
+import PageHeader from '../components/PageHeader'
 
 const FIRMAS = {
   lider: {
@@ -78,9 +79,25 @@ export default function FormatoDetalle() {
       <ErrorAlert mensaje={error} onReintentar={recargar} />
       {!cargando && formato && (
         <>
-          <Typography variant="h5" component="h1" gutterBottom>
-            Formato #{formato.id}
-          </Typography>
+          <PageHeader
+            titulo={`Formato #${formato.id}`}
+            descripcion="FO-PFTO-0057 · la firma de líder va antes que la de calidad y ninguna se puede deshacer."
+            accion={
+              <>
+                {puedeFirmarLider && (
+                  <Button variant="contained" onClick={() => setFirmaPendiente('lider')}>
+                    Firmar como líder
+                  </Button>
+                )}
+                {puedeFirmarCalidad && (
+                  <Button variant="contained" onClick={() => setFirmaPendiente('calidad')}>
+                    Firmar calidad
+                  </Button>
+                )}
+              </>
+            }
+          />
+          <ErrorAlert mensaje={errorAccion} />
           <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 2 }}>
               <Dato titulo="Estado">
@@ -98,19 +115,6 @@ export default function FormatoDetalle() {
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
             <Firma titulo="Firma de líder" firmado={formato.firmado_lider} usuarioId={formato.lider_id} fecha={formato.fecha_firma_lider} />
             <Firma titulo="Firma de calidad" firmado={formato.firmado_calidad} usuarioId={formato.calidad_id} fecha={formato.fecha_firma_calidad} />
-          </Box>
-          <ErrorAlert mensaje={errorAccion} />
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            {puedeFirmarLider && (
-              <Button variant="contained" onClick={() => setFirmaPendiente('lider')}>
-                Firmar como líder
-              </Button>
-            )}
-            {puedeFirmarCalidad && (
-              <Button variant="contained" onClick={() => setFirmaPendiente('calidad')}>
-                Firmar calidad
-              </Button>
-            )}
           </Box>
         </>
       )}
