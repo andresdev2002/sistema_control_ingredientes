@@ -1,7 +1,7 @@
 # Notas del proyecto
 
 - bcrypt debe quedar fijado en 4.0.1 por incompatibilidad con passlib 1.7.4. No actualizarlo.
-- Alcance actual: el PDF del formato FO-PFTO-0057 está FUERA de alcance por ahora. Los endpoints de formatos solo manejan los datos (generar, consultar, cerrar/firmar). La generación de PDF se hace en una fase posterior.
+- Alcance actual: el PDF del Registro de Trazabilidad de Ingredientes está FUERA de alcance por ahora. Los endpoints de formatos solo manejan los datos (generar, consultar, cerrar/firmar). La generación de PDF se hace en una fase posterior.
 
 ## Stack
 
@@ -44,7 +44,7 @@ Desde `backend/`:
 
 - **Reingreso de sobrante** (saldo hijo): `saldo.saldo_padre_id` y `registro_consumo.saldo_nuevo_id` existen en el modelo para este flujo, pero quedan `NULL` siempre — el Módulo de consumos solo decrementa el saldo existente, nunca crea un saldo nuevo a partir de lo que sobra. Implementar el reingreso real (reetiquetar el sobrante con su propio código de barras) queda fuera de alcance.
 - **Concurrencia real sin probar**: `with_for_update()` se usa en consumos (orden primero, saldo después, siempre en ese orden) para evitar saldos negativos bajo carrera, pero no hay ningún test con dos conexiones/transacciones reales ejecutando en paralelo — toda la suite usa una sola sesión por test. El comportamiento bajo contención real (bloqueo, orden de espera, posibles deadlocks) no está verificado empíricamente.
-- **Generación de PDF** del formato FO-PFTO-0057: fuera de alcance, ver nota de arriba. `pdf_path` queda `NULL`.
+- **Generación de PDF** del Registro de Trazabilidad de Ingredientes: fuera de alcance, ver nota de arriba. `pdf_path` queda `NULL`.
 - **CRLF/LF mezclados**: algunos archivos editados en esta sesión pueden tener finales de línea inconsistentes entre ediciones hechas desde Windows y desde WSL. No se normalizó; revisar con `git diff --check` o un `.gitattributes` si se vuelve un problema real.
 - **Warnings `PydanticDeprecatedSince20`**: todos los schemas usan `class Config: from_attributes = True` (sintaxis Pydantic v1), que Pydantic v2 acepta pero marca como deprecada a favor de `model_config = ConfigDict(from_attributes=True)`. No se migró para no tocar más archivos de los necesarios; es un cambio cosmético sin impacto funcional.
 

@@ -81,7 +81,7 @@ export default function FormatoDetalle() {
         <>
           <PageHeader
             titulo={`Formato #${formato.id}`}
-            descripcion="FO-PFTO-0057 · la firma de líder va antes que la de calidad y ninguna se puede deshacer."
+            descripcion="Registro de Trazabilidad de Ingredientes · la firma de líder va antes que la de calidad y ninguna se puede deshacer."
             accion={
               <>
                 {puedeFirmarLider && (

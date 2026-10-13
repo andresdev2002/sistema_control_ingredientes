@@ -40,7 +40,7 @@ export default function Formatos() {
 
   return (
     <>
-      <PageHeader titulo="Formatos FO-PFTO-0057" descripcion="Formatos generados al cerrar órdenes y el estado de sus firmas." />
+      <PageHeader titulo="Formatos — Registro de Trazabilidad de Ingredientes" descripcion="Formatos generados al cerrar órdenes y el estado de sus firmas." />
       <DataTable
         columnas={columnas}
         filas={formatos.datos}
