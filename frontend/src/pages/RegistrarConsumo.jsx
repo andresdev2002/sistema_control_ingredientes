@@ -16,6 +16,8 @@ import PageHeader from '../components/PageHeader'
 
 const SIN_SALDO = { codigo: '', datos: null, descripcion: '', error: '', cargando: false }
 
+const CAMPO_GRANDE = { '& .MuiInputBase-input': { fontSize: '1.35rem', py: 1.75 }, '& .MuiInputLabel-root:not(.MuiInputLabel-shrink)': { fontSize: '1.15rem' } }
+
 export default function RegistrarConsumo() {
   const ordenes = useCarga(listarOrdenes)
   const [ordenId, setOrdenId] = useState('')
@@ -119,7 +121,7 @@ export default function RegistrarConsumo() {
       {resultado && (
         <ConsumoResultado consumo={resultado.consumo} codigoBarras={resultado.codigoBarras} onCerrar={() => setResultado(null)} />
       )}
-      <Paper variant="outlined" sx={{ p: 2 }}>
+      <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
         {ordenes.cargando && <LoadingBlock />}
         <ErrorAlert mensaje={ordenes.error} onReintentar={ordenes.recargar} />
         {!ordenes.cargando && !ordenes.error && abiertas.length === 0 && (
@@ -129,7 +131,7 @@ export default function RegistrarConsumo() {
         )}
         <ErrorAlert mensaje={error} />
         <Box component="form" onSubmit={handleSubmit} noValidate>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '2fr 1fr' }, gap: 2 }}>
             <TextField
               id="consumo-orden"
               select
@@ -137,8 +139,8 @@ export default function RegistrarConsumo() {
               value={ordenId}
               onChange={(e) => setOrdenId(e.target.value)}
               required
-              size="small"
-              sx={{ minWidth: 240 }}
+              fullWidth
+              sx={CAMPO_GRANDE}
               disabled={ordenes.cargando}
             >
               {abiertas.map((o) => (
@@ -148,9 +150,9 @@ export default function RegistrarConsumo() {
                 </MenuItem>
               ))}
             </TextField>
-            <TurnoSelect id="consumo-turno" value={turno} onChange={(e) => setTurno(e.target.value)} />
+            <TurnoSelect id="consumo-turno" value={turno} onChange={(e) => setTurno(e.target.value)} size="medium" sx={CAMPO_GRANDE} />
           </Box>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr auto' }, gap: 2, mt: 2, alignItems: 'stretch' }}>
             <TextField
               id="consumo-codigo"
               label="Código de barras del bulto"
@@ -161,8 +163,8 @@ export default function RegistrarConsumo() {
               inputRef={codigoRef}
               autoFocus
               required
-              size="small"
-              sx={{ minWidth: 240 }}
+              fullWidth
+              sx={CAMPO_GRANDE}
               autoComplete="off"
             />
             <TextField
@@ -172,11 +174,12 @@ export default function RegistrarConsumo() {
               onChange={(e) => setPeso(e.target.value)}
               inputRef={pesoRef}
               required
-              size="small"
+              fullWidth
+              sx={CAMPO_GRANDE}
               autoComplete="off"
               slotProps={{ htmlInput: { inputMode: 'decimal' } }}
             />
-            <Button type="submit" variant="contained" disabled={enviando || agotado}>
+            <Button type="submit" variant="contained" size="large" disabled={enviando || agotado} sx={{ minHeight: 60, px: 5, fontSize: '1.15rem' }}>
               {enviando ? 'Registrando…' : 'Registrar'}
             </Button>
           </Box>

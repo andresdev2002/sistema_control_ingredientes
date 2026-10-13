@@ -45,6 +45,7 @@ export default function Usuarios() {
     {
       campo: 'activo',
       titulo: 'Estado',
+      valorOrden: (f) => (f.activo ? 'Activo' : 'Inactivo'),
       render: (f) => <Chip size="small" label={f.activo ? 'Activo' : 'Inactivo'} color={f.activo ? 'success' : 'default'} />,
     },
     { campo: 'fecha_creacion', titulo: 'Creación', render: (f) => formatearFechaHora(f.fecha_creacion) },

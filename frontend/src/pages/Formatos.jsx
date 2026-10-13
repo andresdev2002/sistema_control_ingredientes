@@ -23,7 +23,7 @@ export default function Formatos() {
 
   const columnas = [
     { campo: 'id', titulo: 'Formato' },
-    { campo: 'orden_produccion_id', titulo: 'Orden', render: (f) => codigos[f.orden_produccion_id] ?? `ID ${f.orden_produccion_id}` },
+    { campo: 'orden_produccion_id', titulo: 'Orden', render: (f) => codigos[f.orden_produccion_id] ?? `ID ${f.orden_produccion_id}`, valorOrden: (f) => codigos[f.orden_produccion_id] ?? '' },
     { campo: 'estado', titulo: 'Estado', render: (f) => <EstadoChip estado={f.estado} /> },
     { campo: 'generado_por', titulo: 'Generado por (ID)' },
     { campo: 'fecha_generacion', titulo: 'Generación', render: (f) => formatearFechaHora(f.fecha_generacion) },

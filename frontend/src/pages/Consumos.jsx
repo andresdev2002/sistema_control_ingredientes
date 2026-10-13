@@ -26,7 +26,7 @@ export default function Consumos() {
   }, [ordenes.datos])
 
   const columnaOrden = [
-    { campo: 'orden_produccion_id', titulo: 'Orden', render: (f) => codigos[f.orden_produccion_id] ?? `ID ${f.orden_produccion_id}` },
+    { campo: 'orden_produccion_id', titulo: 'Orden', render: (f) => codigos[f.orden_produccion_id] ?? `ID ${f.orden_produccion_id}`, valorOrden: (f) => codigos[f.orden_produccion_id] ?? '' },
   ]
 
   return (
