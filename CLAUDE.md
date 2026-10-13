@@ -35,6 +35,10 @@ Desde `backend/`:
 ## Supuestos pendientes de confirmar con Symrise
 
 - Un `peso_capturado` que redondea a `0.00` se rechaza (400). No está escrito en ningún lado, es una extensión de la regla general "cantidades > 0".
+- **Umbrales de alertas del frontend** (`frontend/src/utils/umbrales.js`, solo para mostrar; no cambian datos ni validaciones):
+  - `SALDO_BAJO_PORCENTAJE = 20`: un saldo ACTIVO es "bajo" si `cantidad_disponible / cantidad_recibida` de su recepción de origen (`origen_recepcion_id`) es ≤ 20 %. Exactamente 20 % cuenta como bajo. Un saldo sin recepción de origen nunca se marca como bajo.
+  - `DIAS_POR_VENCER = 30`: un saldo ACTIVO está "por vencer" si `hoy ≤ fecha_vencimiento ≤ hoy + 30`. Vence hoy cuenta como por vencer (no vencido) y el día hoy+30 todavía entra. "Vencido" es solo `fecha_vencimiento < hoy`. "Hoy" sale del reloj local del navegador.
+  - Ambos valores y los tres criterios de borde son supuestos, no reglas de Symrise.
 
 ## Pendientes de diseño
 
@@ -151,7 +155,7 @@ Ejecutar una fase por sesión/pedido y detenerse al terminarla.
 
 ## Frontend
 
-Estado: fases 1 a 5 terminadas en la rama `frontend` (sin push). React 18 + Vite + MUI, JavaScript.
+Estado: fases 1 a 5 terminadas en la rama `frontend`; mejoras de diseño e Inicio con indicadores (fases A a E) en la rama `mejoras-diseno`. Sin push. React 18 + Vite + MUI, JavaScript.
 
 ### Instalar y correr
 
@@ -170,11 +174,16 @@ Todo desde Ubuntu (WSL), con el Node de nvm (`which node` debe apuntar a `/home/
 
 ### Estructura de `frontend/src`
 
-- `api/`: `client.js` (fetch, token Bearer, errores en español, 401 → `/login` con "Sesión expirada", 403 → "No tienes permiso para esta acción"), un archivo por recurso y `useCarga.js` (hook de carga con cargando/error/recargar que usan todas las listas).
+- `api/`: `client.js` (fetch, token Bearer, errores en español, 401 → `/login` con "Sesión expirada", 403 → "No tienes permiso para esta acción"), un archivo por recurso y `useCarga.js` (hook de carga con cargando/error/recargar que usan todas las listas, y `combinarCargas` para tarjetas que dependen de varias cargas).
 - `context/`: `AuthContext.jsx` (provider: usuario, rol, login, logout; al cargar llama `GET /usuarios/me`) y `useAuth.js` (contexto + hook; nombre distinto porque `authContext.js` choca con `AuthContext.jsx` en el disco de Windows, que no distingue mayúsculas).
-- `components/`: Layout, ProtectedRoute, DataTable (maneja los 4 estados), ConfirmDialog, ErrorAlert, LoadingBlock, Mensaje (Snackbar), EstadoChip, Dato, TurnoSelect y formularios/paneles por pantalla.
+- `theme.js`: tema MUI central (paleta, tipografía, bordes, estilos de tabla/chip/botón), aplicado en `main.jsx`.
+- `components/`: Layout (menú fijo desde `md`, Drawer temporal con botón ☰ en pantallas chicas), PageHeader (título, descripción y acción), ProtectedRoute, DataTable (4 estados, buscador, orden por columna, `resaltarFila`, vacío con ícono), ConfirmDialog, ErrorAlert, LoadingBlock, Mensaje (Snackbar), EstadoChip, Dato, TurnoSelect, ResumenSaldos y formularios/paneles por pantalla.
+- `components/inicio/`: InicioLider, InicioOperario, InicioCalidad, TarjetaIndicador (cargando, error con Reintentar, vacío y enlace) y las tarjetas de cada indicador.
 - `pages/`: una por pantalla (lista de la sección 3).
-- `utils/formato.js`: decimales (2 decimales, sin floats para decidir), fechas `dd/mm/aaaa hh:mm`, `fecha_vencimiento` partiendo el string, normalizar coma → punto, validaciones básicas.
+- `utils/formato.js`: decimales (2 decimales, sin floats para decidir), fechas `dd/mm/aaaa hh:mm`, `fecha_vencimiento` partiendo el string, normalizar coma → punto, validaciones básicas, `fechaLocalHoy()`.
+- `utils/umbrales.js`: umbrales de alertas (supuestos, ver arriba).
+- `utils/indicadores.js`: funciones puras de los indicadores (saldo bajo en centésimas enteras, por vencer comparando strings `YYYY-MM-DD`, consumos de hoy por `fecha_hora.slice(0,10)`, "últimos" por fecha string con desempate por `id` descendente).
+- `utils/tabla.js`: comparación para ordenar (decimales como string sin floats, texto en español) y normalización para buscar (sin tildes ni mayúsculas).
 - Token en `localStorage` bajo la clave `ingredientes_token`.
 
 ### Matriz de pantallas por rol
@@ -200,11 +209,24 @@ La UI oculta menú y botones; el backend es quien decide. Ruta desconocida → "
 - En Recepciones el material se elige de un Select con los materiales existentes (el 404 por SAP inexistente casi no se da desde la UI, pero se muestra si llega).
 - Consumos y Formatos muestran el código de la orden cruzando con `GET /ordenes-produccion`; si esa carga falla, muestran `ID n`.
 
+### Inicio con indicadores y mejoras de diseño (rama `mejoras-diseno`)
+
+- Inicio por rol, calculado en cliente con endpoints existentes; cada pantalla pide cada endpoint una sola vez y lo reparte entre tarjetas. Si una carga falla, solo las tarjetas que dependen de ella muestran error con Reintentar.
+  - LIDER: saldos bajos (barra de progreso), por vencer o vencidos, órdenes abiertas, formatos por firmar (PENDIENTE y FIRMADO_LIDER), consumos de hoy (cantidad y kg), últimos 5 consumos, accesos rápidos (abren las páginas existentes).
+  - OPERARIO: órdenes abiertas con botón a Registrar consumo, saldos bajos, sus últimos 5 consumos (`usuario_id` propio).
+  - CALIDAD: formatos esperando su firma (FIRMADO_LIDER, destacados) y últimos 5 completos. Nunca pide `/saldos` ni `/recepciones`.
+- Tema central, encabezado uniforme en todas las pantallas (en detalle de orden y de formato, "Generar formato" y los botones de firma pasaron al encabezado con las mismas condiciones) y menú adaptable a celular.
+- Tablas: buscador y orden por columna en cliente.
+- Saldos: tarjetas-resumen (activos, agotados, por vencer o vencidos) desde un único `GET /saldos` sin filtro; sin filtros la tabla reutiliza esa respuesta, con filtros pide al backend como antes. Filas ámbar (saldo bajo) y rojas (vencido; gana sobre ámbar).
+- Registrar consumo: campos y botón grandes y panel de éxito verde. Flujo de foco, validaciones y lógica sin cambios.
+- Sin dependencias nuevas y sin cambios en `backend/`.
+
 ### Pendientes del frontend
 
 - Mostrar nombres en vez de ids de líder (`lider_id`) y calidad (`calidad_id`), y también de `usuario_id`, `usuario_apertura_id` y `generado_por`. Hoy se muestran como ID porque los usuarios no-LIDER no pueden pedir `GET /usuarios`.
 - Sin pruebas automatizadas del frontend: solo build, lint y el checklist manual de abajo.
-- Menú lateral permanente: en pantallas muy angostas (celular) ocupa espacio; no hay versión responsive.
+- Sin paginación: el Inicio y Saldos cargan listas completas (`/saldos`, `/recepciones`, `/consumos`, `/formatos`, `/ordenes-produccion`) y calculan en el navegador. Con volumen real habría que pedir un resumen al backend (endpoint de indicadores) o paginar.
+- Confirmar con Symrise los umbrales `SALDO_BAJO_PORCENTAJE` y `DIAS_POR_VENCER` y sus criterios de borde (ver "Supuestos pendientes").
 - Generación de PDF del formato: fuera de alcance (ver arriba).
 
 ### Checklist de pruebas manuales por rol
@@ -238,6 +260,14 @@ Requisitos: backend corriendo con CORS, `npm run dev`, y al menos un usuario de 
 2. Ir a `/saldos`, `/materiales`, `/recepciones`, `/consumos/registrar` y `/usuarios` a mano → "Sin acceso" en cada una.
 3. Órdenes y Consumos: solo lectura.
 4. Formatos: uno PENDIENTE → sin botones. Uno FIRMADO_LIDER → "Firmar calidad" → confirmar → COMPLETO con `calidad_id` y fecha; el botón desaparece.
+
+**Inicio y diseño** (hoy = fecha local del navegador)
+1. Saldo bajo: recepción de 25.00 y consumir 20.00 → aparece (20 %); con 5.02 disponibles no aparece; un saldo AGOTADO no aparece.
+2. Por vencer: vencimiento ayer → "Vencido" (rojo); hoy → "Vence hoy"; hoy+30 → aparece; hoy+31 → no aparece.
+3. Últimos 5: registrar 6 consumos → se ven los 5 más recientes; "Consumos de hoy" cuenta los 6.
+4. Bloquear `/recepciones` en DevTools → solo "Saldos bajos" (Inicio) o el resaltado ámbar (Saldos) muestran aviso con Reintentar; lo demás se ve.
+5. CALIDAD: en Network el Inicio no pide `/saldos` ni `/recepciones`.
+6. Ancho < 900 px: aparece el botón ☰, el menú se abre y se cierra al navegar; tarjetas en una columna.
 
 **Sesión**
 1. Con sesión abierta, borrar en DevTools > Application > Local Storage el valor de `ingredientes_token` y navegar a otra pantalla (o recargar) → `/login` con aviso "Sesión expirada".
